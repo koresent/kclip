@@ -1,0 +1,22 @@
+[package]
+name = "kclip-ui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+app-core.workspace = true
+content.workspace = true
+kclip-config.workspace = true
+storage.workspace = true
+kclip-ipc.workspace = true
+processors.workspace = true
+tracing.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+image.workspace = true
+url.workspace = true
+directories.workspace = true
+
+gpui = "0.2.2"

@@ -1,0 +1,19 @@
+[package]
+name = "capture"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+app-core.workspace = true
+content.workspace = true
+wayland-client.workspace = true
+wayland-protocols.workspace = true
+wayland-protocols-wlr.workspace = true
+crossbeam-channel.workspace = true
+rustix.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

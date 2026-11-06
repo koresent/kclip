@@ -1,0 +1,27 @@
+[package]
+name = "kclip"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "kclip"
+path = "src/main.rs"
+
+[dependencies]
+app-core.workspace = true
+content.workspace = true
+kclip-config.workspace = true
+storage.workspace = true
+capture.workspace = true
+detection.workspace = true
+processors.workspace = true
+kclip-ipc.workspace = true
+kclip-ui.workspace = true
+clap.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+directories.workspace = true
+crossbeam-channel.workspace = true
+serde_json.workspace = true
+libc = "0.2"

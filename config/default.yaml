@@ -1,0 +1,45 @@
+app:
+  start_hidden: true
+  socket_path: null
+
+clipboard:
+  history_limit: 10000
+  ignore_duplicates: true
+  capture_primary_selection: true
+  max_item_size_mb: 50
+  debounce_quiet_ms: 100
+  debounce_burst_ms: 500
+
+storage:
+  retention_days: 90
+  max_storage_mb: 2048
+  db_path: null
+
+ui:
+  theme: "dark"
+  width: 780
+  height: 320
+  card_size: 200
+  card_spacing: 16
+  backdrop_blur: true
+  show_quick_paste_badges: true
+  max_text_lines: 6
+  animation_duration_ms: 120
+
+features:
+  syntax_highlighting: true
+  color_preview: true
+  url_cleaner: true
+  thumbnail_generation: true
+
+security:
+  detect_sensitive_content: true
+  exclude_password_managers: true
+  ignored_apps:
+    - "org.keepassxc.KeePassXC"
+    - "bitwarden"
+    - "com.bitwarden.desktop"
+
+logging:
+  level: "info"
+  redact_sensitive: true

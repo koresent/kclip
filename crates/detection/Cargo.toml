@@ -1,0 +1,11 @@
+[package]
+name = "detection"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+app-core.workspace = true
+content.workspace = true
+url.workspace = true
+thiserror.workspace = true
