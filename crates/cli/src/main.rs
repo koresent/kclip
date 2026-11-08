@@ -45,6 +45,32 @@ enum Commands {
     Quit,
 }
 
+fn ui_pid_file_path() -> PathBuf {
+    std::env::var("XDG_RUNTIME_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| PathBuf::from("/tmp"))
+        .join("kclip-ui.pid")
+}
+
+fn get_running_ui_pid(pid_file: &std::path::Path) -> Option<i32> {
+    if !pid_file.exists() {
+        return None;
+    }
+    if let Ok(content) = std::fs::read_to_string(pid_file) {
+        if let Ok(pid) = content.trim().parse::<i32>() {
+            if unsafe { libc::kill(pid, 0) } == 0 {
+                if let Ok(cmdline) = std::fs::read_to_string(format!("/proc/{}/cmdline", pid)) {
+                    if cmdline.contains("kclip") {
+                        return Some(pid);
+                    }
+                }
+            }
+        }
+    }
+    let _ = std::fs::remove_file(pid_file);
+    None
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
@@ -81,21 +107,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             daemon::run_daemon(config)?;
         }
         Commands::Toggle => {
-            let pid_file = std::env::var("XDG_RUNTIME_DIR")
-                .map(PathBuf::from)
-                .unwrap_or_else(|_| PathBuf::from("/tmp"))
-                .join("kclip-ui.pid");
-
-            if pid_file.exists() {
-                if let Ok(content) = std::fs::read_to_string(&pid_file) {
-                    if let Ok(pid) = content.trim().parse::<i32>() {
-                        if unsafe { libc::kill(pid, 0) } == 0 {
-                            let _ = unsafe { libc::kill(pid, libc::SIGTERM) };
-                            let _ = std::fs::remove_file(&pid_file);
-                            return Ok(());
-                        }
-                    }
-                }
+            let pid_file = ui_pid_file_path();
+            if let Some(pid) = get_running_ui_pid(&pid_file) {
+                let _ = unsafe { libc::kill(pid, libc::SIGTERM) };
+                let _ = std::fs::remove_file(&pid_file);
+                return Ok(());
             }
 
             let current_pid = std::process::id();
@@ -105,19 +121,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             res?;
         }
         Commands::Show => {
-            let pid_file = std::env::var("XDG_RUNTIME_DIR")
-                .map(PathBuf::from)
-                .unwrap_or_else(|_| PathBuf::from("/tmp"))
-                .join("kclip-ui.pid");
-
-            if pid_file.exists() {
-                if let Ok(content) = std::fs::read_to_string(&pid_file) {
-                    if let Ok(pid) = content.trim().parse::<i32>() {
-                        if unsafe { libc::kill(pid, 0) } == 0 {
-                            return Ok(());
-                        }
-                    }
-                }
+            let pid_file = ui_pid_file_path();
+            if get_running_ui_pid(&pid_file).is_some() {
+                return Ok(());
             }
 
             let current_pid = std::process::id();
@@ -127,7 +133,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             res?;
         }
         Commands::Hide => {
-            send_or_report(&socket_path, IpcCommand::Hide);
+            let pid_file = ui_pid_file_path();
+            if let Some(pid) = get_running_ui_pid(&pid_file) {
+                let _ = unsafe { libc::kill(pid, libc::SIGTERM) };
+                let _ = std::fs::remove_file(&pid_file);
+            }
         }
         Commands::Status => {
             send_or_report(&socket_path, IpcCommand::Status);

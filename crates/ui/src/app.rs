@@ -167,7 +167,7 @@ impl KclipAppView {
             };
 
             if self.search_query.trim().is_empty() {
-                let all = db_lock.list_items(100, 0).unwrap_or_default();
+                let all = db_lock.list_items(30, 0).unwrap_or_default();
                 if self.active_filter == FilterKind::All {
                     all
                 } else {
@@ -176,7 +176,7 @@ impl KclipAppView {
                         .collect()
                 }
             } else {
-                let results = db_lock.search_items(&self.search_query, 50).unwrap_or_default();
+                let results = db_lock.search_items(&self.search_query, 30).unwrap_or_default();
                 if self.active_filter == FilterKind::All {
                     results
                 } else {
