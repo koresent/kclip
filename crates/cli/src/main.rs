@@ -116,6 +116,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let current_pid = std::process::id();
             let _ = std::fs::write(&pid_file, current_pid.to_string());
+            spawn_wayland_focus_warp(current_pid);
             let res = kclip_ui::launch_ui(config);
             let _ = std::fs::remove_file(&pid_file);
             res?;
@@ -128,6 +129,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let current_pid = std::process::id();
             let _ = std::fs::write(&pid_file, current_pid.to_string());
+            spawn_wayland_focus_warp(current_pid);
             let res = kclip_ui::launch_ui(config);
             let _ = std::fs::remove_file(&pid_file);
             res?;
@@ -172,4 +174,34 @@ fn send_or_report(socket_path: &PathBuf, cmd: IpcCommand) {
             std::process::exit(1);
         }
     }
+}
+
+fn spawn_wayland_focus_warp(pid: u32) {
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(40));
+        let uid = unsafe { libc::getuid() };
+        let sock_path = format!("/run/user/{uid}/umbriel-wayland-0.sock");
+        if let Ok(mut stream) = std::os::unix::net::UnixStream::connect(sock_path) {
+            use std::io::{BufRead, BufReader, Write};
+            let _ = stream.write_all(b"{\"cmd\":\"windows\"}\n");
+            let mut reader = BufReader::new(stream);
+            let mut line = String::new();
+            if reader.read_line(&mut line).is_ok() {
+                if let Ok(val) = serde_json::from_str::<serde_json::Value>(&line) {
+                    if let Some(wins) = val.get("ok").and_then(|v| v.as_array()) {
+                        for w in wins {
+                            if w.get("pid").and_then(|p| p.as_u64()) == Some(pid as u64) {
+                                if let Some(id) = w.get("id").and_then(|i| i.as_str()) {
+                                    let _ = std::process::Command::new("umbriel")
+                                        .args(["msg", "window-focus-warp", id])
+                                        .status();
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
 }
